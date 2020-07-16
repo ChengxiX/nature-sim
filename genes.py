@@ -20,6 +20,9 @@ class producer(auto):
         '摄食'
         if not res:
             self.die()
+    def reproduce(self):
+        #未实现创建一个名为变量的对象
+        pass
     def die(self):
         #此处可以有被分解
         del self
@@ -63,4 +66,5 @@ class water(environment):
     pass
 
 if __name__ == '__main__':
+    plants = []
     sun = suns()
