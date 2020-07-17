@@ -12,21 +12,26 @@ class hetero(creature):
 
 class producer(auto):
     '生产者'
-    def __init__(self, cost, height):
+    def __init__(self, sun, plants_list, cost, height):
         self.cost = cost
         self.height = height
-        sun.sunlight_queue.append({'height': self.height, 'cost': self.cost, 'self': self})
+        self.sun = sun
+        self.plants_list = plants_list
+        self.sun.sunlight_queue.append({'height': self.height, 'cost': self.cost, 'self': self})
     def ingestion(self, res):
-        '摄食'
+        '摄食，被动过程，被太阳调用'
         if not res:
             self.die()
+        else:
+            self.reproduce()
     def reproduce(self):
-        #未实现创建一个名为变量的对象
+        self.plants_list.append(producer(self.sun, self.plants_list,self.cost, self.height))
         pass
     def die(self):
         #此处可以有被分解
+        self.plants_list.remove(self)
+        self.sun.sunlight_queue.remove({'height': self.height, 'cost': self.cost, 'self': self})
         del self
-    pass
 
 class consumer(hetero):
     '消费者'
@@ -44,17 +49,19 @@ class environment():
 
 class suns(environment):
     '太阳'
-    def __init__(self, sunlight=100):
+    def __init__(self, sunlight):
         self.sunlight = sunlight
         self.sunlight_queue = []
     def shine(self):
         sunlight_avail = self.sunlight
         self.sunlight_queue = sorted(self.sunlight_queue, key=lambda x: x['height'])
         for i in self.sunlight_queue:
-            i['self'].ingestion(res=True)
-            sunlight_avail -= i['cost']
-            if sunlight_avail <= 0:
-                break
+            if sunlight_avail > 0:
+                i['self'].ingestion(res=True)
+                sunlight_avail -= i['cost']
+            else:
+                i['self'].ingestion(res=False)
+
     pass
 
 class land(environment):
@@ -64,7 +71,3 @@ class land(environment):
 class water(environment):
     '水'
     pass
-
-if __name__ == '__main__':
-    plants = []
-    sun = suns()
