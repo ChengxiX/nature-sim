@@ -14,14 +14,14 @@ class hetero(creature):
 
 class producer(auto):
     '生产者'
-    def __init__(self, sun, plants_list, cost, height, vary_magnifi=1, efficiency_magnifi=10):
-        self.plants_list = plants_list
+    def __init__(self, sun, producers_list, cost, height, vary_magnifi=1, efficiency_magnifi=10):
+        self.producers_list = producers_list
         self.cost = cost
         self.height = height
         self.sun = sun
         self.sun.sunlight_queue.append({'height': self.height, 'cost': self.cost, 'self': self})
         self.vary_magnifi = vary_magnifi
-        self.plants_list.append(self)
+        self.producers_list.append(self)
         if efficiency_magnifi * cost < height:
             self.die()
     def ingestion(self, res):
@@ -31,7 +31,7 @@ class producer(auto):
         else:
             self.reproduce()
     def copy(self, cost, height):
-        producer(self.sun, self.plants_list, cost, height)
+        producer(self.sun, self.producers_list, cost, height)
     def reproduce(self):
         posi = random.randrange(2)
         if posi == 0:
@@ -46,7 +46,7 @@ class producer(auto):
         self.copy(self.cost + height_changes, self.height + cost_changes)
     def die(self):
         #此处可以有被分解
-        self.plants_list.remove(self)
+        self.producers_list.remove(self)
         self.sun.sunlight_queue.remove({'height': self.height, 'cost': self.cost, 'self': self})
         del self
 
@@ -73,13 +73,12 @@ class suns(environment):
         sunlight_avail = self.sunlight
         self.sunlight_queue = sorted(self.sunlight_queue, key=lambda x: x['height'], reverse=True)
         for i in self.sunlight_queue:
+            sunlight_avail -= i['cost']
+            #print(self.sunlight_queue)
             if sunlight_avail > 0:
                 i['self'].ingestion(res=True)
-                sunlight_avail -= i['cost']
             else:
                 i['self'].ingestion(res=False)
-
-    pass
 
 class land(environment):
     '土地（空间）'
