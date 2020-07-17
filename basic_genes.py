@@ -14,25 +14,36 @@ class hetero(creature):
 
 class producer(auto):
     '生产者'
-    def __init__(self, sun, plants_list, cost, height):
+    def __init__(self, sun, plants_list, cost, height, vary_magnifi=1, efficiency_magnifi=10):
+        self.plants_list = plants_list
         self.cost = cost
         self.height = height
         self.sun = sun
-        self.plants_list = plants_list
         self.sun.sunlight_queue.append({'height': self.height, 'cost': self.cost, 'self': self})
+        self.vary_magnifi = vary_magnifi
+        self.plants_list.append(self)
+        if efficiency_magnifi * cost < height:
+            self.die()
     def ingestion(self, res):
         '摄食，被动过程，被太阳调用'
         if not res:
             self.die()
         else:
-            posi = random.randrange(2)
-            if posi == 0:
-                self.reproduce(self.cost+random.random(),self.height+random.random())
-            else:
-                self.reproduce(self.cost-random.random(), self.height-random.random())
-    def reproduce(self, cost, height):
-        self.plants_list.append(producer(self.sun, self.plants_list, cost, height))
-        pass
+            self.reproduce()
+    def copy(self, cost, height):
+        producer(self.sun, self.plants_list, cost, height)
+    def reproduce(self):
+        posi = random.randrange(2)
+        if posi == 0:
+            height_changes = random.random() * self.vary_magnifi
+        else:
+            height_changes = - random.random() * self.vary_magnifi
+        posi = random.randrange(2)
+        if posi == 0:
+            cost_changes = random.random() * self.vary_magnifi
+        else:
+            cost_changes = - random.random() * self.vary_magnifi
+        self.copy(self.cost + height_changes, self.height + cost_changes)
     def die(self):
         #此处可以有被分解
         self.plants_list.remove(self)
