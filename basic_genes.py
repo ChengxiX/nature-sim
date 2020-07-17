@@ -1,3 +1,5 @@
+import random
+
 class creature():
     '生物'
     pass
@@ -23,9 +25,13 @@ class producer(auto):
         if not res:
             self.die()
         else:
-            self.reproduce()
-    def reproduce(self):
-        self.plants_list.append(producer(self.sun, self.plants_list,self.cost, self.height))
+            posi = random.randrange(2)
+            if posi == 0:
+                self.reproduce(self.cost+random.random(),self.height+random.random())
+            else:
+                self.reproduce(self.cost-random.random(), self.height-random.random())
+    def reproduce(self, cost, height):
+        self.plants_list.append(producer(self.sun, self.plants_list, cost, height))
         pass
     def die(self):
         #此处可以有被分解
@@ -54,7 +60,7 @@ class suns(environment):
         self.sunlight_queue = []
     def shine(self):
         sunlight_avail = self.sunlight
-        self.sunlight_queue = sorted(self.sunlight_queue, key=lambda x: x['height'])
+        self.sunlight_queue = sorted(self.sunlight_queue, key=lambda x: x['height'], reverse=True)
         for i in self.sunlight_queue:
             if sunlight_avail > 0:
                 i['self'].ingestion(res=True)
