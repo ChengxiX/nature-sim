@@ -1,5 +1,10 @@
 import random
 
+def set_envir(the_sun, the_producers_list):
+    global sun, producers_list
+    sun = the_sun
+    producers_list = the_producers_list
+
 class creature():
     '生物'
     pass
@@ -14,15 +19,18 @@ class hetero(creature):
 
 class producer(auto):
     '生产者'
-    def __init__(self, sun, producers_list, cost, height, vary_magnifi=1, efficiency_magnifi=10):
-        self.producers_list = producers_list
+    pass
+
+class tree(producer):
+    def __init__(self, cost, height, vary_magnifi=1, efficiency_magnifi=10, max_height=20):
         self.cost = cost
         self.height = height
-        self.sun = sun
-        self.sun.sunlight_queue.append({'height': self.height, 'cost': self.cost, 'self': self})
+        sun.sunlight_queue.append({'height': self.height, 'cost': self.cost, 'self': self})
         self.vary_magnifi = vary_magnifi
-        self.producers_list.append(self)
-        if efficiency_magnifi * cost < height:
+        producers_list.append(self)
+        if efficiency_magnifi * self.cost < self.height:
+            self.die()
+        if height > max_height:
             self.die()
     def ingestion(self, res):
         '摄食，被动过程，被太阳调用'
@@ -30,8 +38,6 @@ class producer(auto):
             self.die()
         else:
             self.reproduce()
-    def copy(self, cost, height):
-        producer(self.sun, self.producers_list, cost, height)
     def reproduce(self):
         posi = random.randrange(2)
         if posi == 0:
@@ -43,11 +49,66 @@ class producer(auto):
             cost_changes = random.random() * self.vary_magnifi
         else:
             cost_changes = - random.random() * self.vary_magnifi
-        self.copy(self.cost + height_changes, self.height + cost_changes)
+        tree(self.cost + height_changes, self.height + cost_changes)
     def die(self):
         #此处可以有被分解
-        self.producers_list.remove(self)
-        self.sun.sunlight_queue.remove({'height': self.height, 'cost': self.cost, 'self': self})
+        try:
+            producers_list.remove(self)
+        except ValueError:
+            pass
+        try:
+            sun.sunlight_queue.remove({'height': self.height, 'cost': self.cost, 'self': self})
+        except ValueError:
+            pass
+        del self
+
+class alga(producer):
+    def __init__(self, cost, height, repro_times=4, vary_magnifi=0.01, efficiency_magnifi=50, max_height=2):
+        self.repro_times = repro_times
+        self.cost = cost
+        self.height = height
+        sun.sunlight_queue.append({'height': self.height, 'cost': self.cost, 'self': self})
+        self.vary_magnifi = vary_magnifi
+        producers_list.append(self)
+        if efficiency_magnifi * self.cost < self.height:
+            self.die()
+        if height > max_height:
+            self.die()
+    def ingestion(self, res):
+        '摄食，被动过程，被太阳调用'
+        if not res:
+            self.die()
+        else:
+            self.reproduce()
+    def reproduce(self):
+        for i in range(self.repro_times):
+            posi = random.randrange(2)
+            if posi == 0:
+                height_changes = random.random() * self.vary_magnifi
+            else:
+                height_changes = - random.random() * self.vary_magnifi
+            posi = random.randrange(2)
+            if posi == 0:
+                cost_changes = random.random() * self.vary_magnifi
+            else:
+                cost_changes = - random.random() * self.vary_magnifi
+            if random.randint(0, 1//self.vary_magnifi):
+                repro_times_changes = random.choice([1, -1])
+            else:
+                repro_times_changes = 0
+            alga(self.cost + height_changes, self.height + cost_changes, self.repro_times + repro_times_changes)
+
+        self.die()
+    def die(self):
+        #此处可以有被分解
+        try:
+            producers_list.remove(self)
+        except ValueError:
+            pass
+        try:
+            sun.sunlight_queue.remove({'height': self.height, 'cost': self.cost, 'self': self})
+        except ValueError:
+            pass
         del self
 
 class consumer(hetero):
@@ -70,13 +131,12 @@ class suns(environment):
         self.sunlight = sunlight
         self.sunlight_queue = []
     def shine(self):
-        sunlight_avail = self.sunlight
+        self.sunlight_avail = self.sunlight
         self.sunlight_queue = sorted(self.sunlight_queue, key=lambda x: x['height'], reverse=True)
         for i in self.sunlight_queue:
-            sunlight_avail -= i['cost']
-            #print(self.sunlight_queue)
-            if sunlight_avail > 0:
+            if self.sunlight_avail - i['cost'] > 0:
                 i['self'].ingestion(res=True)
+                self.sunlight_avail -= i['cost']
             else:
                 i['self'].ingestion(res=False)
 
