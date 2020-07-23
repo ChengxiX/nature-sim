@@ -2,6 +2,7 @@ import random
 
 import abc
 
+
 def set_envir(the_sun, the_producers_list):
     global sun, producers_list
     sun = the_sun
@@ -53,6 +54,7 @@ class producer(auto):
 
     @abc.abstractmethod
     def reproduce(self):
+        '''抽象方法'''
         pass
 
 
