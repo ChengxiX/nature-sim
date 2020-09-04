@@ -14,15 +14,16 @@ if __name__ == '__main__':
     for t in range(100):
         sum_of_alags = 0
         sum_of_trees = 0
-        #print(mainen.environment['producer_list'])
-        for i in mainen.environment['producer_list']:
-            mainen.environment['sun'].shine()
+        #print(mainen.producer_list)
+        for i in mainen.producer_list:
+            mainen.sun.shine()
             if isinstance(i, alga):
                 sum_of_alags += 1
             elif isinstance(i, tree):
                 sum_of_trees += 1
         sums_of_alags.append(sum_of_alags)
         sums_of_trees.append(sum_of_trees)
+        print('=')
     plt.plot(sums_of_trees, marker='.', color='b')
     plt.plot(sums_of_alags, marker='.', color='r')
     plt.show()

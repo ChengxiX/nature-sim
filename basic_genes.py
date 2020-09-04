@@ -28,7 +28,7 @@ class producer(auto):
     '生产者'
     def __init__(self, cost, height, vary_magnifi, efficiency_magnifi, max_height, container):
         self.container = container
-        self.container.environment['producer_list'].append(self)
+        self.container.producer_list.append(self)
         self.cost = cost
         self.height = height
         self.container.sunlight_queue.append({'height': self.height, 'cost': self.cost, 'self': self})
@@ -41,7 +41,7 @@ class producer(auto):
     def die(self):
         # 此处可以有被分解
         try:
-            self.container.environment['producer_list'].remove(self)
+            self.container.producer_list.remove(self)
         except ValueError:
             pass
         try:
@@ -122,7 +122,8 @@ class decomposer(hetero):
 
 class container():
     def __init__(self, sunlight=10):
-        self.environment = {'sun': suns(sunlight, self),'producer_list': []}
+        self.producer_list = []
+        self.sun = suns(sunlight, self)
         self.sunlight_queue = []
 
 
