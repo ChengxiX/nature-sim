@@ -2,14 +2,18 @@ import random
 
 import abc
 
-
-def set_envir(the_sun, the_producers_list):
-    global sun, producers_list
-    sun = the_sun
-    producers_list = the_producers_list
-
 class creature():
     '生物'
+
+    @abc.abstractmethod
+    def reproduce(self):
+        '''抽象方法'''
+        pass
+
+    @abc.abstractmethod
+    def die(self):
+        '''抽象方法'''
+        pass
     pass
 
 class auto(creature):
@@ -22,11 +26,12 @@ class hetero(creature):
 
 class producer(auto):
     '生产者'
-    def __init__(self, cost, height, vary_magnifi, efficiency_magnifi, max_height):
-        producers_list.append(self)
+    def __init__(self, cost, height, vary_magnifi, efficiency_magnifi, max_height, container):
+        self.container = container
+        self.container.environment['producer_list'].append(self)
         self.cost = cost
         self.height = height
-        sun.sunlight_queue.append({'height': self.height, 'cost': self.cost, 'self': self})
+        self.container.sunlight_queue.append({'height': self.height, 'cost': self.cost, 'self': self})
         self.vary_magnifi = vary_magnifi
         if efficiency_magnifi * self.cost < self.height:
             self.die()
@@ -36,11 +41,11 @@ class producer(auto):
     def die(self):
         # 此处可以有被分解
         try:
-            producers_list.remove(self)
+            self.container.environment['producer_list'].remove(self)
         except ValueError:
             pass
         try:
-            sun.sunlight_queue.remove({'height': self.height, 'cost': self.cost, 'self': self})
+            self.container.sunlight_queue.remove({'height': self.height, 'cost': self.cost, 'self': self})
         except ValueError:
             pass
         del self
@@ -52,16 +57,12 @@ class producer(auto):
         else:
             self.reproduce()
 
-    @abc.abstractmethod
-    def reproduce(self):
-        '''抽象方法'''
-        pass
-
 
 
 class tree(producer):
-    def __init__(self, cost, height, vary_magnifi=1, efficiency_magnifi=10, max_height=20):
-        super(tree, self).__init__(cost, height, vary_magnifi, efficiency_magnifi, max_height)
+    '''Perennial Plant 多年生植物'''
+    def __init__(self, cost, height, container,vary_magnifi=1, efficiency_magnifi=10, max_height=20):
+        super(tree, self).__init__(cost, height, vary_magnifi, efficiency_magnifi, max_height, container)
 
     def reproduce(self):
         posi = random.randrange(2)
@@ -74,12 +75,14 @@ class tree(producer):
             cost_changes = random.random() * self.vary_magnifi
         else:
             cost_changes = - random.random() * self.vary_magnifi
-        tree(self.cost + height_changes, self.height + cost_changes)
+        tree(self.cost + height_changes, self.height + cost_changes, self.container)
 
 class alga(producer):
-    def __init__(self, cost, height, repro_times=4, vary_magnifi=0.01, efficiency_magnifi=50, max_height=2):
+    '''Annual Plant 一年生植物'''
+
+    def __init__(self, cost, height, container, repro_times=4, vary_magnifi=0.01, efficiency_magnifi=50, max_height=2):
         self.repro_times = repro_times
-        super(alga, self).__init__(cost, height, vary_magnifi, efficiency_magnifi, max_height)
+        super(alga, self).__init__(cost, height, vary_magnifi, efficiency_magnifi, max_height, container)
 
     def reproduce(self):
         for i in range(self.repro_times):
@@ -97,7 +100,7 @@ class alga(producer):
                 repro_times_changes = random.choice([1, -1])
             else:
                 repro_times_changes = 0
-            alga(self.cost + height_changes, self.height + cost_changes, self.repro_times + repro_times_changes)
+            alga(self.cost + height_changes, self.height + cost_changes, self.container, repro_times=self.repro_times + repro_times_changes)
 
         self.die()
 
@@ -105,24 +108,39 @@ class consumer(hetero):
     '消费者'
     pass
 
+class animal(consumer):
+    '动物'
+    def ingestion(self):
+        pass
+    def die(self):
+        pass
+
 class decomposer(hetero):
     '分解者'
     pass
 
 
+class container():
+    def __init__(self, sunlight=10):
+        self.environment = {'sun': suns(sunlight, self),'producer_list': []}
+        self.sunlight_queue = []
+
+
 
 class environment():
     '环境'
-    pass
+    def __init__(self, container):
+        self.container = container
 
 class suns(environment):
     '太阳'
-    def __init__(self, sunlight):
+    def __init__(self, sunlight, container):
+        super(suns, self).__init__(container)
         self.sunlight = sunlight
-        self.sunlight_queue = []
+
     def shine(self):
         self.sunlight_avail = self.sunlight
-        self.sunlight_queue = sorted(self.sunlight_queue, key=lambda x: x['height'], reverse=True)
+        self.sunlight_queue = sorted(self.container.sunlight_queue, key=lambda x: x['height'], reverse=True)
         for i in self.sunlight_queue:
             if self.sunlight_avail - i['cost'] > 0:
                 i['self'].ingestion(res=True)
