@@ -130,7 +130,7 @@ class container():
         self.sunlight_queue = []
 
         # 初始化zmq
-        self.port = "55566"
+        self.port = "5556"
 
         # Socket to talk to server
         self.context = zmq.Context()
@@ -142,9 +142,11 @@ class container():
         sums_of_trees = []
         sums_of_alags = []
         while True:
+            #print('listening')
             string = self.socket.recv()
             topic, num, name = string.split()
-
+            num = int(num)
+            #print(num)
             if num > 0:
                 sum_of_alags = 0
                 sum_of_trees = 0
@@ -156,11 +158,12 @@ class container():
                         sum_of_trees += 1
                 sums_of_alags.append(sum_of_alags)
                 sums_of_trees.append(sum_of_trees)
-
             elif num == -1:
-                plt.plot(sums_of_trees, marker='.', color='b')
-                plt.plot(sums_of_alags, marker='.', color='r')
-                plt.show()
+                break
+        plt.plot(sums_of_trees, marker='.', color='b')
+        plt.plot(sums_of_alags, marker='.', color='r')
+        plt.show()
+
 
 
 class environment():

@@ -2,12 +2,13 @@ from basic_genes import *
 
 import zmq
 import threading
+import time
 
 
 def message(socket, data):
     topic = 1
     messagedata = data
-    print('topic:%s messagedata:%s' % (topic, messagedata))
+    #print('topic:%s messagedata:%s' % (topic, messagedata))
     socket.send_string('%d %d %s' % (topic, messagedata, pub_server_name))
 
 def new_container():
@@ -23,7 +24,7 @@ def new_container():
 if __name__ == '__main__':
 
     #初始化zmq
-    port = '55566'
+    port = '5556'
     pub_server_name = 'pub-sim_main'
     context = zmq.Context()
     socket = context.socket(zmq.PUB)
@@ -31,9 +32,12 @@ if __name__ == '__main__':
 
     #container多线程
     newcontainer = threading.Thread(target=new_container)
+    newcontainer.setDaemon(True)
     newcontainer.start()
 
     #开始模拟
-    for t in range(1):
+    time.sleep(0.1)
+    for t in range(1000):
         message(socket, 100)
     message(socket, -1)
+    input('input anything to stop')
