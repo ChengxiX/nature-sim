@@ -1,4 +1,7 @@
 import random
+import zmq
+
+import matplotlib.pyplot as plt
 
 import abc
 
@@ -121,11 +124,43 @@ class decomposer(hetero):
 
 
 class container():
-    def __init__(self, sunlight=10):
+    def __init__(self, topicfilter='1'):
         self.producer_list = []
-        self.sun = suns(sunlight, self)
+        self.sun = suns(self)
         self.sunlight_queue = []
 
+        # 初始化zmq
+        self.port = "55566"
+
+        # Socket to talk to server
+        self.context = zmq.Context()
+        self.socket = self.context.socket(zmq.SUB)
+        self.socket.connect("tcp://localhost:%s" % self.port)
+        self.socket.setsockopt_string(zmq.SUBSCRIBE, topicfilter)
+
+    def listen(self):
+        sums_of_trees = []
+        sums_of_alags = []
+        while True:
+            string = self.socket.recv()
+            topic, num, name = string.split()
+
+            if num > 0:
+                sum_of_alags = 0
+                sum_of_trees = 0
+                self.sun.shine(num)
+                for i in self.producer_list:
+                    if isinstance(i, alga):
+                        sum_of_alags += 1
+                    elif isinstance(i, tree):
+                        sum_of_trees += 1
+                sums_of_alags.append(sum_of_alags)
+                sums_of_trees.append(sum_of_trees)
+
+            elif num == -1:
+                plt.plot(sums_of_trees, marker='.', color='b')
+                plt.plot(sums_of_alags, marker='.', color='r')
+                plt.show()
 
 
 class environment():
@@ -135,12 +170,11 @@ class environment():
 
 class suns(environment):
     '太阳'
-    def __init__(self, sunlight, container):
+    def __init__(self, container):
         super(suns, self).__init__(container)
-        self.sunlight = sunlight
 
-    def shine(self):
-        self.sunlight_avail = self.sunlight
+    def shine(self, sunlight):
+        self.sunlight_avail = sunlight
         self.sunlight_queue = sorted(self.container.sunlight_queue, key=lambda x: x['height'], reverse=True)
         for i in self.sunlight_queue:
             if self.sunlight_avail - i['cost'] > 0:

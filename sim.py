@@ -1,29 +1,39 @@
 from basic_genes import *
 
-import matplotlib.pyplot as plt
+import zmq
+import threading
 
-if __name__ == '__main__':
+
+def message(socket, data):
+    topic = 1
+    messagedata = data
+    print('topic:%s messagedata:%s' % (topic, messagedata))
+    socket.send_string('%d %d %s' % (topic, messagedata, pub_server_name))
+
+def new_container():
     mainen = container()
     tree(5, 12, mainen)
     tree(7, 15, mainen)
     for i in range(10):
         alga(0.05, 0.8, mainen)
         alga(0.08, 1, mainen)
-    sums_of_trees = []
-    sums_of_alags = []
-    for t in range(100):
-        sum_of_alags = 0
-        sum_of_trees = 0
-        #print(mainen.producer_list)
-        for i in mainen.producer_list:
-            mainen.sun.shine()
-            if isinstance(i, alga):
-                sum_of_alags += 1
-            elif isinstance(i, tree):
-                sum_of_trees += 1
-        sums_of_alags.append(sum_of_alags)
-        sums_of_trees.append(sum_of_trees)
-        print('=')
-    plt.plot(sums_of_trees, marker='.', color='b')
-    plt.plot(sums_of_alags, marker='.', color='r')
-    plt.show()
+    mainen.listen()
+
+
+if __name__ == '__main__':
+
+    #初始化zmq
+    port = '55566'
+    pub_server_name = 'pub-sim_main'
+    context = zmq.Context()
+    socket = context.socket(zmq.PUB)
+    socket.bind('tcp://*:%s' % port)
+
+    #container多线程
+    newcontainer = threading.Thread(target=new_container)
+    newcontainer.start()
+
+    #开始模拟
+    for t in range(1):
+        message(socket, 100)
+    message(socket, -1)
